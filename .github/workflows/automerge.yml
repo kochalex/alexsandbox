@@ -22,6 +22,7 @@ jobs:
         uses: "pascalgn/automerge-action@a7a731467672c853f76342a06615311a787d5591"
         env:
           GITHUB_TOKEN: "${{ secrets.AUTOMERGE_TOKEN }}"
-          LABELS: "!WIP"
+          LABELS: "!WIP,automerge"
+          AUTOMERGE: "automerge"
           AUTOREBASE: "automerge"
           MERGE_METHOD: "squash"
