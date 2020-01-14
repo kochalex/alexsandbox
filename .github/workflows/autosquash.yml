@@ -34,4 +34,4 @@ jobs:
           # https://github.community/t5/GitHub-Actions/Triggering-a-new-workflow-from-another-workflow/td-p/31676
           # In the meantime, use a personal access token with repo access.
           # See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
-          github_token: ${{ secrets.AUTOMERGE_TOKEN }}
+          github_token: ${{ secrets.AUTOSQUASH_TOKEN }}
