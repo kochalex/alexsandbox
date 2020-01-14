@@ -28,7 +28,7 @@ jobs:
     name: Autosquash
     steps:
       - name: Autosquash
-        uses: tibdex/autosquash@master
+        uses: tibdex/autosquash@3ded0d9e280d4dae06f2ebcdee1445e98820f006
         env:
           # We can't use the built-in secrets.GITHUB_TOKEN yet because of this limitation:
           # https://github.community/t5/GitHub-Actions/Triggering-a-new-workflow-from-another-workflow/td-p/31676
