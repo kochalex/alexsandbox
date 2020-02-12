@@ -9,7 +9,7 @@ jobs:
 
       - run:
           name: Greeting
-          command: sleep 10 && echo Hello, world.
+          command: echo Hello, world.
 
       - run:
           name: Print the Current Time
