@@ -1,4 +1,4 @@
-name: Bump version
+name: Bump tag version
 on:
   push:
     branches:
@@ -14,4 +14,4 @@ jobs:
         uses: anothrNick/github-tag-action@31c05bec812d1a339edacdf9fbf5b068691a65b2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
+          RELEASE_BRANCHES: "master,production"
