@@ -1,0 +1,12 @@
+  
+name: "Test action"
+on:
+  push:
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get-env
+        run: env
+      - name: get-event
+        run: cat "$GITHUB_EVENT_PATH" | jq -M .
