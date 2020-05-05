@@ -23,14 +23,12 @@ jobs:
           export BRANCH_NAME=${GITHUB_REF##*/}
           echo $SHORT_SHA
           echo $BRANCH_NAME
-      - name: test-echo
-        run: |
           echo \
           "{
             \"deployment\": {
-              \"revision\": \"${{ github.sha }}\",
+              \"revision\": \"$SHORT_SHA\",
               \"changelog\": \"${{ github.event.head_commit.message }}\",
-              \"description\": \"Deployed to production: ${{ github.event.head_commit }}\",
+              \"description\": \"pushed to $BRANCH_NAME: ${{ github.event.head_commit.url }}\",
               \"user\": \"${{ github.event.head_commit.author.username }}\"
             }
           }"
