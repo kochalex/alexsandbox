@@ -5,7 +5,7 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     env:
-      SHORTSHA: $(git rev-parse --short=7 ${{ github.sha }})
+      SHORTSHA: ${GITHUB_SHA::7}
     steps:
       - name: get-env
         run: env
@@ -16,7 +16,7 @@ jobs:
       # - name: test-trim-too
       #   run: echo ${{ github.sha:7 }}
       - name: full-env-var
-        run: echo $GITHUBSHA
+        run: echo $GITHUB_SHA
       - name: echo-short
         run: echo $SHORTSHA
       - name: test-four
