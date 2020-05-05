@@ -17,6 +17,12 @@ jobs:
         run: echo "::set-env name=SHORT_SHA::${GITHUB_SHA::7}"
       - name: echo-short
         run: echo $SHORT_SHA
+      - name: final-tests
+        run: |
+          export SHORT_SHA=${GITHUB_SHA::10}
+          export BRANCH_NAME=${GITHUB_REF##*/}
+          echo $SHORT_SHA
+          echo $BRANCH_NAME
       - name: test-echo
         run: |
           echo \
