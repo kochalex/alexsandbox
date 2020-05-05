@@ -13,10 +13,10 @@ jobs:
         run: cat "$GITHUB_EVENT_PATH" | jq -M .
       # - name: test-trim
       #   run: echo ${{ github.sha::7 }}
-      - name: test-trim-too
-        run: echo ${{ github.sha:7 }}
-      - name: test-trim-three
-        run: echo ${{ github.sha }}
+      # - name: test-trim-too
+      #   run: echo ${{ github.sha:7 }}
+      - name: full-env-var
+        run: echo $GITHUBSHA
       - name: echo-short
         run: echo $SHORTSHA
       - name: test-four
