@@ -1,12 +1,35 @@
-  
 name: "Test action"
 on:
   push:
 jobs:
   debug:
     runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/production' ||  github.ref == 'refs/heads/master' }}
     steps:
       - name: get-env
         run: env
       - name: get-event
         run: cat "$GITHUB_EVENT_PATH" | jq -M .
+      - name: full-env-var
+        run: echo $GITHUB_SHA
+      - name: test-four
+        run: echo ${GITHUB_SHA::7}
+      - name: export-short
+        run: echo "::set-env name=SHORT_SHA::${GITHUB_SHA::7}"
+      - name: echo-short
+        run: echo $SHORT_SHA
+      - name: final-tests
+        run: |
+          export SHORT_SHA=${GITHUB_SHA::10}
+          export BRANCH_NAME=${GITHUB_REF##*/}
+          echo $SHORT_SHA
+          echo $BRANCH_NAME
+          echo \
+          "{
+            \"deployment\": {
+              \"revision\": \"$SHORT_SHA\",
+              \"changelog\": \"${{ github.event.head_commit.message }}\",
+              \"description\": \"pushed to $BRANCH_NAME: ${{ github.event.head_commit.url }}\",
+              \"user\": \"${{ github.event.head_commit.author.username }}\"
+            }
+          }"
