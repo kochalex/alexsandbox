@@ -12,9 +12,9 @@ jobs:
       - name: full-env-var
         run: echo $GITHUB_SHA
       - name: test-four
-        run: echo ${GITHUB_SHA:7}
+        run: echo ${GITHUB_SHA::7}
       - name: export-short
-        run: echo "::set-env name=SHORT_SHA::${GITHUB_SHA:7}"
+        run: echo "::set-env name=SHORT_SHA::${GITHUB_SHA::7}"
       - name: echo-short
         run: echo $SHORT_SHA
       - name: test-echo
