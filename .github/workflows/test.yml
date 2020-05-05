@@ -4,11 +4,23 @@ on:
 jobs:
   debug:
     runs-on: ubuntu-latest
+    env:
+      SHORTSHA: $(git rev-parse --short=7 ${{ github.sha }})
     steps:
       - name: get-env
         run: env
       - name: get-event
         run: cat "$GITHUB_EVENT_PATH" | jq -M .
+      - name: test-trim
+        run: echo ${{ github.sha::7 }}
+      - name: test-trim-too
+        run: echo ${{ github.sha:7 }}
+      - name: test-trim-three
+        run: echo ${{ github.sha }}
+      - name: echo-short
+        run: echo $SHORTSHA
+      - name: test-four
+        run: echo ${GITHUB_SHA:7}
       - name: test-echo
         run: |
           echo \
