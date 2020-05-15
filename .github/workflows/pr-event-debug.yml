@@ -1,4 +1,4 @@
-name: "Test action"
+name: "PR action"
 on:
   pull_request:
 jobs:
@@ -9,3 +9,25 @@ jobs:
         run: env | sort
       - name: get-event
         run: cat "$GITHUB_EVENT_PATH" | jq -M .
+      - name: modified dirs
+        run: git diff master --dirstat=files,0 | awk '{$1=""}1' | sed 's/\/.*//' | sort | uniq > modified-dirs.txt
+      - name: echo dirs
+        run: cat modified-dirs.txt
+      - name: Comment on PR
+        uses: actions/github-script@0.9.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            console.log('starting')
+            const modifiedDirectories = fs.readFileSync('modified-dirs.txt').toString().split('\n')
+            console.log(modifiedDirectories)
+            const urlBase = `https://www.google.com/${process.env.GITHUB_HEAD_REF}/`
+            console.log(urlBase)
+            const links = lines.map(x => `${base}${x}`).join('\n')
+            console.log(links)
+            await github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Preview created/updated under ${urlBase} - it will be available for 30 days. New/modified apps:\n ${links}`
+            })
