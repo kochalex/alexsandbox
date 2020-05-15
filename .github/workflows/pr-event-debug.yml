@@ -24,7 +24,7 @@ jobs:
             console.log(modifiedDirectories)
             const urlBase = `https://www.google.com/${process.env.GITHUB_HEAD_REF}/`
             console.log(urlBase)
-            const links = lines.map(x => `${base}${x}`).join('\n')
+            const links = modifiedDirectories.map(x => `${base}${x}`).join('\n')
             console.log(links)
             await github.issues.createComment({
               issue_number: context.issue.number,
