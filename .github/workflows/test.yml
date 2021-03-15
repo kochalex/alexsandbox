@@ -3,7 +3,7 @@ on:
   pull_request:
 jobs:
   do-not-run:
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'NOCI') }
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'NOCI') }}
     runs-on: ubuntu-latest
     steps:
       - name: get-env
