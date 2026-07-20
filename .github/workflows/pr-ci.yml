@@ -1,0 +1,91 @@
+name: PR CI POC
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-ci-poc-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect affected services
+    runs-on: ubuntu-latest
+    outputs:
+      alpha: ${{ steps.filter.outputs.alpha }}
+      bravo: ${{ steps.filter.outputs.bravo }}
+      charlie: ${{ steps.filter.outputs.charlie }}
+      delta: ${{ steps.filter.outputs.delta }}
+      echo: ${{ steps.filter.outputs.echo }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Match changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: .github/ci/paths.yml
+
+      - name: Summarize affected services
+        env:
+          ALPHA: ${{ steps.filter.outputs.alpha }}
+          BRAVO: ${{ steps.filter.outputs.bravo }}
+          CHARLIE: ${{ steps.filter.outputs.charlie }}
+          DELTA: ${{ steps.filter.outputs.delta }}
+          ECHO: ${{ steps.filter.outputs.echo }}
+        run: |
+          {
+            echo "## Change detection"
+            echo ""
+            echo "| Service | Affected |"
+            echo "| --- | --- |"
+            echo "| Alpha | $ALPHA |"
+            echo "| Bravo | $BRAVO |"
+            echo "| Charlie | $CHARLIE |"
+            echo "| Delta | $DELTA |"
+            echo "| Echo | $ECHO |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  alpha:
+    name: Alpha CI
+    needs: changes
+    if: needs.changes.outputs.alpha == 'true'
+    uses: ./.github/workflows/ci-alpha.yml
+
+  bravo:
+    name: Bravo CI
+    needs: changes
+    if: needs.changes.outputs.bravo == 'true'
+    uses: ./.github/workflows/ci-bravo.yml
+
+  charlie:
+    name: Charlie CI
+    needs: changes
+    if: needs.changes.outputs.charlie == 'true'
+    uses: ./.github/workflows/ci-charlie.yml
+
+  delta:
+    name: Delta CI
+    needs: changes
+    if: needs.changes.outputs.delta == 'true'
+    uses: ./.github/workflows/ci-delta.yml
+
+  echo:
+    name: Echo CI
+    needs: changes
+    if: needs.changes.outputs.echo == 'true'
+    uses: ./.github/workflows/ci-echo.yml
+
+  gate:
+    name: PR CI / gate
+    needs: [changes, alpha, bravo, charlie, delta, echo]
+    if: always()
+    uses: ./.github/workflows/ci-gate.yml
+    with:
+      results_json: ${{ toJSON(needs) }}

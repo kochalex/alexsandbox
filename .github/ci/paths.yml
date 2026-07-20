@@ -1,0 +1,34 @@
+alpha:
+  - &ci_config '.github/ci/**'
+  - &ci_orchestrator '.github/workflows/pr-ci.yml'
+  - &ci_gate '.github/workflows/ci-gate.yml'
+  - '.github/workflows/ci-alpha.yml'
+  - 'services/alpha/**'
+
+bravo:
+  - *ci_config
+  - *ci_orchestrator
+  - *ci_gate
+  - '.github/workflows/ci-bravo.yml'
+  - 'services/bravo/**'
+
+charlie:
+  - *ci_config
+  - *ci_orchestrator
+  - *ci_gate
+  - '.github/workflows/ci-charlie.yml'
+  - 'services/charlie/**'
+
+delta:
+  - *ci_config
+  - *ci_orchestrator
+  - *ci_gate
+  - '.github/workflows/ci-delta.yml'
+  - 'services/delta/**'
+
+echo:
+  - *ci_config
+  - *ci_orchestrator
+  - *ci_gate
+  - '.github/workflows/ci-echo.yml'
+  - 'services/echo/**'
