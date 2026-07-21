@@ -1,0 +1,64 @@
+name: PR CI gate
+
+on:
+  workflow_call:
+    inputs:
+      results_json:
+        description: Serialized needs context from the PR CI orchestrator
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    name: Evaluate results
+    runs-on: ubuntu-latest
+    env:
+      RESULTS_JSON: ${{ inputs.results_json }}
+    steps:
+      - name: Verify affected and skipped services
+        run: |
+          set -euo pipefail
+
+          changes_result="$(jq -r '.changes.result // "missing"' <<< "$RESULTS_JSON")"
+          failures=0
+
+          if [ "$changes_result" != "success" ]; then
+            echo "::error::Change detection result was $changes_result"
+            failures=1
+          fi
+
+          {
+            echo "## PR CI gate"
+            echo ""
+            echo "| Service | Changed | CI result |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for service in alpha bravo charlie delta echo; do
+            changed="$(jq -r --arg service "$service" '.changes.outputs[$service] // "false"' <<< "$RESULTS_JSON")"
+            result="$(jq -r --arg service "$service" '.[$service].result // "missing"' <<< "$RESULTS_JSON")"
+
+            echo "| $service | $changed | $result |" >> "$GITHUB_STEP_SUMMARY"
+
+            if [ "$changed" = "true" ] && [ "$result" != "success" ]; then
+              echo "::error::$service CI should have run successfully, but result was $result"
+              failures=1
+            fi
+
+            if [ "$changed" != "true" ] && [ "$result" != "skipped" ]; then
+              echo "::error::$service CI should have been skipped, but result was $result"
+              failures=1
+            fi
+          done
+
+          if [ "$failures" -ne 0 ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Gate failed." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Gate passed. Every affected service completed successfully." >> "$GITHUB_STEP_SUMMARY"

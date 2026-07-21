@@ -1,0 +1,23 @@
+name: Charlie CI
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash services/charlie/build.sh
+
+  test:
+    name: Test (optional, intentionally fails)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash services/charlie/test.sh
