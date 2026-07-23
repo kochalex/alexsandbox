@@ -43,7 +43,7 @@ jobs:
           {
             echo "## Change detection"
             echo ""
-            echo "| Service | Affected |"
+            echo "| Service | Changed |"
             echo "| --- | --- |"
             echo "| Alpha | $ALPHA |"
             echo "| Bravo | $BRAVO |"

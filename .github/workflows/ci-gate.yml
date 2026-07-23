@@ -54,7 +54,9 @@ jobs:
               *) job_status="Missing" ;;
             esac
 
-            echo "| $service | $changed | $required | $job_status | $result |" >> "$GITHUB_STEP_SUMMARY"
+            service_label="$(tr '[:lower:]' '[:upper:]' <<< "${service:0:1}")${service:1}"
+
+            echo "| $service_label | $changed | $required | $job_status | $result |" >> "$GITHUB_STEP_SUMMARY"
 
             if [ "$changed" = "true" ] && [ "$result" != "success" ]; then
               echo "::error::$service CI should have run successfully, but result was $result"
