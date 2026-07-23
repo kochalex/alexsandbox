@@ -33,33 +33,51 @@ jobs:
             failures=1
           fi
 
+          declare -A SERVICE_JOBS=(
+            [alpha]="build test"
+            [bravo]="build"
+            [charlie]="build test"
+            [delta]="build test"
+            [echo]="build test"
+          )
+
           {
             echo "## PR CI gate"
             echo ""
-            echo "| Service | Changed | Required | Job status | CI result |"
-            echo "| --- | --- | --- | --- | --- |"
+            echo "| Service | Job | Changed | Required | Job status | CI result |"
+            echo "| --- | --- | --- | --- | --- | --- |"
           } >> "$GITHUB_STEP_SUMMARY"
 
           for service in alpha bravo charlie delta echo; do
             changed="$(jq -r --arg service "$service" '.changes.outputs[$service] // "false"' <<< "$RESULTS_JSON")"
             result="$(jq -r --arg service "$service" '.[$service].result // "missing"' <<< "$RESULTS_JSON")"
-
-            required="Yes"
-            if grep -q "continue-on-error: true" ".github/workflows/ci-$service.yml"; then
-              required="No"
-            fi
-
-            case "$result" in
-              success) job_status="Passed" ;;
-              skipped) job_status="Skipped" ;;
-              failure) job_status="Failed" ;;
-              cancelled) job_status="Cancelled" ;;
-              *) job_status="Missing" ;;
-            esac
-
             service_label="$(tr '[:lower:]' '[:upper:]' <<< "${service:0:1}")${service:1}"
 
-            echo "| $service_label | $changed | $required | $job_status | $result |" >> "$GITHUB_STEP_SUMMARY"
+            for job in ${SERVICE_JOBS[$service]}; do
+              job_required="$(yq "(.jobs.$job.\"continue-on-error\" // false) == false" ".github/workflows/ci-$service.yml")"
+              required="Yes"
+              if [ "$job_required" != "true" ]; then
+                required="No"
+              fi
+
+              if [ "$changed" = "true" ]; then
+                job_result="$(jq -r --arg service "$service" --arg job "$job" '.[$service].outputs[$job + "_result"] // "missing"' <<< "$RESULTS_JSON")"
+              else
+                job_result="skipped"
+              fi
+
+              case "$job_result" in
+                success) job_status="Passed" ;;
+                skipped) job_status="Skipped" ;;
+                failure) job_status="Failed" ;;
+                cancelled) job_status="Cancelled" ;;
+                *) job_status="Missing" ;;
+              esac
+
+              job_label="$(tr '[:lower:]' '[:upper:]' <<< "${job:0:1}")${job:1}"
+
+              echo "| $service_label | $job_label | $changed | $required | $job_status | $job_result |" >> "$GITHUB_STEP_SUMMARY"
+            done
 
             if [ "$changed" = "true" ] && [ "$result" != "success" ]; then
               echo "::error::$service CI should have run successfully, but result was $result"

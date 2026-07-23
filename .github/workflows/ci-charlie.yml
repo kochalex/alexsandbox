@@ -2,6 +2,11 @@ name: Charlie CI
 
 on:
   workflow_call:
+    outputs:
+      build_result:
+        value: ${{ jobs.build.outputs.result }}
+      test_result:
+        value: ${{ jobs.test.outputs.result }}
 
 permissions:
   contents: read
@@ -10,14 +15,20 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.run.outcome }}
     steps:
       - uses: actions/checkout@v7
-      - run: bash services/charlie/build.sh
+      - id: run
+        run: bash services/charlie/build.sh
 
   test:
     name: Test (optional, intentionally fails)
     runs-on: ubuntu-latest
     continue-on-error: true
+    outputs:
+      result: ${{ steps.run.outcome }}
     steps:
       - uses: actions/checkout@v7
-      - run: bash services/charlie/test.sh
+      - id: run
+        run: bash services/charlie/test.sh
