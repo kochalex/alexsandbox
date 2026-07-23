@@ -33,15 +33,28 @@ jobs:
           {
             echo "## PR CI gate"
             echo ""
-            echo "| Service | Changed | CI result |"
-            echo "| --- | --- | --- |"
+            echo "| Service | Changed | Required | Job status | CI result |"
+            echo "| --- | --- | --- | --- | --- |"
           } >> "$GITHUB_STEP_SUMMARY"
 
           for service in alpha bravo charlie delta echo; do
             changed="$(jq -r --arg service "$service" '.changes.outputs[$service] // "false"' <<< "$RESULTS_JSON")"
             result="$(jq -r --arg service "$service" '.[$service].result // "missing"' <<< "$RESULTS_JSON")"
 
-            echo "| $service | $changed | $result |" >> "$GITHUB_STEP_SUMMARY"
+            required="No"
+            if [ "$changed" = "true" ]; then
+              required="Yes"
+            fi
+
+            case "$result" in
+              success) job_status="Passed" ;;
+              skipped) job_status="Skipped" ;;
+              failure) job_status="Failed" ;;
+              cancelled) job_status="Cancelled" ;;
+              *) job_status="Missing" ;;
+            esac
+
+            echo "| $service | $changed | $required | $job_status | $result |" >> "$GITHUB_STEP_SUMMARY"
 
             if [ "$changed" = "true" ] && [ "$result" != "success" ]; then
               echo "::error::$service CI should have run successfully, but result was $result"
