@@ -2,6 +2,11 @@ name: Delta CI
 
 on:
   workflow_call:
+    outputs:
+      build_result:
+        value: ${{ jobs.build.outputs.result }}
+      test_result:
+        value: ${{ jobs.test.outputs.result }}
 
 permissions:
   contents: read
@@ -10,13 +15,19 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.run.outcome }}
     steps:
-      - uses: actions/checkout@v4
-      - run: bash services/delta/build.sh
+      - uses: actions/checkout@v7
+      - id: run
+        run: bash services/delta/build.sh
 
   test:
     name: Test (required, intentionally fails)
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.run.outcome }}
     steps:
-      - uses: actions/checkout@v4
-      - run: bash services/delta/test.sh
+      - uses: actions/checkout@v7
+      - id: run
+        run: bash services/delta/test.sh
