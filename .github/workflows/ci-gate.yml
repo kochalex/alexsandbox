@@ -33,14 +33,6 @@ jobs:
             failures=1
           fi
 
-          declare -A SERVICE_JOBS=(
-            [alpha]="build test"
-            [bravo]="build"
-            [charlie]="build test"
-            [delta]="build test"
-            [echo]="build test"
-          )
-
           {
             echo "## PR CI gate"
             echo ""
@@ -48,12 +40,16 @@ jobs:
             echo "| --- | --- | --- | --- | --- | --- |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          for service in alpha bravo charlie delta echo; do
-            changed="$(jq -r --arg service "$service" '.changes.outputs[$service] // "false"' <<< "$RESULTS_JSON")"
+          while IFS= read -r service; do
+            changed="$(
+              jq -r --arg service "$service" \
+                '(.changes.outputs.services // "[]" | fromjson) | index($service) != null' \
+                <<< "$RESULTS_JSON"
+            )"
             result="$(jq -r --arg service "$service" '.[$service].result // "missing"' <<< "$RESULTS_JSON")"
             service_label="$(tr '[:lower:]' '[:upper:]' <<< "${service:0:1}")${service:1}"
 
-            for job in ${SERVICE_JOBS[$service]}; do
+            while IFS= read -r job; do
               job_required="$(yq "(.jobs.$job.\"continue-on-error\" // false) == false" ".github/workflows/ci-$service.yml")"
               required="Yes"
               if [ "$job_required" != "true" ]; then
@@ -77,7 +73,7 @@ jobs:
               job_label="$(tr '[:lower:]' '[:upper:]' <<< "${job:0:1}")${job:1}"
 
               echo "| $service_label | $job_label | $changed | $required | $job_status | $job_result |" >> "$GITHUB_STEP_SUMMARY"
-            done
+            done < <(yq -r '.jobs | keys | .[]' ".github/workflows/ci-$service.yml")
 
             if [ "$changed" = "true" ] && [ "$result" != "success" ]; then
               echo "::error::$service CI should have run successfully, but result was $result"
@@ -88,7 +84,7 @@ jobs:
               echo "::error::$service CI should have been skipped, but result was $result"
               failures=1
             fi
-          done
+          done < <(yq -r 'keys | .[]' .github/ci/paths.yml)
 
           if [ "$failures" -ne 0 ]; then
             echo "" >> "$GITHUB_STEP_SUMMARY"
