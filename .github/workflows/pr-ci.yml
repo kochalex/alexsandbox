@@ -17,11 +17,7 @@ jobs:
     name: Detect affected services
     runs-on: ubuntu-latest
     outputs:
-      alpha: ${{ steps.filter.outputs.alpha }}
-      bravo: ${{ steps.filter.outputs.bravo }}
-      charlie: ${{ steps.filter.outputs.charlie }}
-      delta: ${{ steps.filter.outputs.delta }}
-      echo: ${{ steps.filter.outputs.echo }}
+      services: ${{ steps.filter.outputs.changes }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -34,52 +30,51 @@ jobs:
 
       - name: Summarize affected services
         env:
-          ALPHA: ${{ steps.filter.outputs.alpha }}
-          BRAVO: ${{ steps.filter.outputs.bravo }}
-          CHARLIE: ${{ steps.filter.outputs.charlie }}
-          DELTA: ${{ steps.filter.outputs.delta }}
-          ECHO: ${{ steps.filter.outputs.echo }}
+          AFFECTED_SERVICES: ${{ steps.filter.outputs.changes }}
         run: |
+          set -euo pipefail
+
           {
             echo "## Change detection"
             echo ""
             echo "| Service | Changed |"
             echo "| --- | --- |"
-            echo "| Alpha | $ALPHA |"
-            echo "| Bravo | $BRAVO |"
-            echo "| Charlie | $CHARLIE |"
-            echo "| Delta | $DELTA |"
-            echo "| Echo | $ECHO |"
+
+            while IFS= read -r service; do
+              changed="$(jq -r --arg service "$service" 'index($service) != null' <<< "$AFFECTED_SERVICES")"
+              service_label="$(tr '[:lower:]' '[:upper:]' <<< "${service:0:1}")${service:1}"
+              echo "| $service_label | $changed |"
+            done < <(yq -r 'keys | .[]' .github/ci/paths.yml)
           } >> "$GITHUB_STEP_SUMMARY"
 
   alpha:
     name: Alpha CI
     needs: changes
-    if: needs.changes.outputs.alpha == 'true'
+    if: contains(fromJSON(needs.changes.outputs.services), 'alpha')
     uses: ./.github/workflows/ci-alpha.yml
 
   bravo:
     name: Bravo CI
     needs: changes
-    if: needs.changes.outputs.bravo == 'true'
+    if: contains(fromJSON(needs.changes.outputs.services), 'bravo')
     uses: ./.github/workflows/ci-bravo.yml
 
   charlie:
     name: Charlie CI
     needs: changes
-    if: needs.changes.outputs.charlie == 'true'
+    if: contains(fromJSON(needs.changes.outputs.services), 'charlie')
     uses: ./.github/workflows/ci-charlie.yml
 
   delta:
     name: Delta CI
     needs: changes
-    if: needs.changes.outputs.delta == 'true'
+    if: contains(fromJSON(needs.changes.outputs.services), 'delta')
     uses: ./.github/workflows/ci-delta.yml
 
   echo:
     name: Echo CI
     needs: changes
-    if: needs.changes.outputs.echo == 'true'
+    if: contains(fromJSON(needs.changes.outputs.services), 'echo')
     uses: ./.github/workflows/ci-echo.yml
 
   gate:
